@@ -26,10 +26,10 @@
 </div><button class="swap" id="swap">⇅</button></div>
 <div class="chips" id="modeChips"><button class="chip active" data-mode="departure">出発</button><button class="chip" data-mode="arrival">到着</button><button class="chip" data-mode="first">始発</button><button class="chip" data-mode="last">終電</button></div>
 <div class="dt"><input id="date" type="date"><input id="time" type="time"></div>
-<button class="search" id="searchBtn">乗換を検索</button><div class="providerNote">標準検索は設定不要。全国の鉄道・運賃・番線情報を確認できます。駅ナビAPIを設定した場合はアプリ内詳細表示を使います。</div><div id="homeNotice" class="notice"></div>
+<button class="search" id="searchBtn">乗換を検索</button><div class="providerNote">全国検索は駅すぱあとAPIを使用します。初回だけアクセスキーを保存すれば、以後は検索ボタンだけで駅ナビ内に結果を表示します。</div><div id="homeNotice" class="notice"></div>
 </section>
 <section class="quick"><small>いつもの通勤</small><h2>二俣川 → 中野坂上</h2><div class="sub">新宿三丁目経由を見つけた場合は上位表示</div><button id="commuteBtn">会社へ →</button></section>
-<div class="section"><h2>検索結果</h2><span id="resultMeta">検索待機中</span></div><div id="results" class="results"><div class="empty">駅名を入れて「乗換を検索」を押してください。標準検索は設定なしで全国検索できます。</div></div>
+<div class="section"><h2>検索結果</h2><span id="resultMeta">検索待機中</span></div><div id="results" class="results"><div class="empty">駅名を入れて「乗換を検索」を押してください。初回だけアクセスキー設定が必要です。</div></div>
 </main>
 
 <main id="timetable" class="panel">
@@ -45,7 +45,7 @@
 
 <nav class="tabs"><button class="tab active" data-panel="home"><span>⌂</span>乗換</button><button class="tab" data-panel="timetable"><span>◷</span>時刻表</button><button class="tab" data-panel="status"><span>!</span>運行情報</button><button class="tab" data-panel="favorite"><span>★</span>お気に入り</button></nav>
 
-<dialog id="settings"><div class="modal settingsGrid"><h3>設定</h3><p>検索結果はすべて駅ナビ内に表示します。接続方法は「アクセスキーを直接入力」が一番簡単です。Cloudflare Workerを使う場合は中継URL方式も選べます。</p><label class="muted">接続方法</label><select id="searchProvider"><option value="direct">駅すぱあとアクセスキーを直接入力</option><option value="api">Cloudflare Workerを使う</option></select><div id="directOnly" class="apiOnly show"><label class="muted">駅すぱあと アクセスキー</label><input id="directKey" type="password" autocomplete="off" placeholder="アクセスキーを入力"><div class="muted">※キーはこの端末のlocalStorageにのみ保存します。GitHub PagesのHTML本体には書き込みません。</div></div><div id="apiOnly" class="apiOnly"><label class="muted">中継API URL</label><input id="apiUrl" placeholder="https://xxxxx.workers.dev"><div id="connection" class="connection">未確認</div><button id="testApi">接続テスト</button></div><button id="saveSettings">保存</button><button id="closeSettings" class="close">閉じる</button></div></dialog>
+<dialog id="settings"><div class="modal settingsGrid"><h3>設定</h3><p>検索結果はすべて駅ナビ内に表示します。初回だけ駅すぱあとアクセスキーを保存してください。保存後は設定画面を出さず、検索ボタンだけで使えます。Cloudflare Worker方式も選べます。</p><label class="muted">接続方法</label><select id="searchProvider"><option value="direct">駅すぱあとアクセスキーを直接入力</option><option value="api">Cloudflare Workerを使う</option></select><div id="directOnly" class="apiOnly show"><label class="muted">駅すぱあと アクセスキー</label><input id="directKey" type="password" autocomplete="off" placeholder="アクセスキーを入力"><div class="muted">※キーはこの端末のlocalStorageにのみ保存します。GitHub PagesのHTML本体には書き込みません。</div></div><div id="apiOnly" class="apiOnly"><label class="muted">中継API URL</label><input id="apiUrl" placeholder="https://xxxxx.workers.dev"><div id="connection" class="connection">未確認</div><button id="testApi">接続テスト</button></div><button id="saveSettings">保存</button><button id="closeSettings" class="close">閉じる</button></div></dialog>
 <script>
 (()=>{
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -55,7 +55,7 @@ const DEFAULT_API_URL='';
 const EK_ROOT='https://api.ekispert.jp/v1/json';
 const now=new Date(), iso=now.toLocaleDateString('sv-SE'), hm=now.toTimeString().slice(0,5); $('#date').value=iso;$('#ttDate').value=iso;$('#time').value=hm;
 if(localStorage.getItem('transitLabsApi')==='https://transit-labs-api.xxx.workers.dev') localStorage.removeItem('transitLabsApi');
-let mode='departure', ttOptions=[];
+let mode='departure', ttOptions=[], pendingSearch=false;
 const cfg=()=>({provider:localStorage.getItem('ekinaviSearchProvider')||'direct',api:(localStorage.getItem('transitLabsApi')||'').replace(/\/$/,''),key:localStorage.getItem('ekinaviDirectKey')||''});
 const arr=v=>v==null?[]:Array.isArray(v)?v:[v];
 const hhmm=raw=>{if(!raw)return'';const s=String(raw);const m=s.match(/T(\d{2}):(\d{2})/);if(m)return `${m[1]}:${m[2]}`;const m2=s.match(/(\d{2}):(\d{2})/);return m2?`${m2[1]}:${m2[2]}`:s};
@@ -94,11 +94,34 @@ async function search(){
   const from=$('#from').value.trim(),to=$('#to').value.trim();
   if(!from||!to){notice('出発駅と到着駅を入力してください。');return}
   const c=cfg();
-  if(c.provider==='direct'&&!c.key){$('#resultMeta').textContent='未設定';$('#results').innerHTML='<div class="empty">駅すぱあとアクセスキーが未設定です。右上の⚙︎ →「アクセスキーを直接入力」にキーを保存すると、この画面内に全国の検索結果を表示できます。</div>';notice('アクセスキーを一度だけ設定してください。検索時に外部サイトへ移動することはありません。');return}
-  if(c.provider==='api'&&!c.api){$('#resultMeta').textContent='未設定';$('#results').innerHTML='<div class="empty">Cloudflare WorkerのURLが未設定です。右上の⚙︎から設定してください。</div>';return}
+  if(c.provider==='direct'&&!c.key){
+    pendingSearch=true;
+    $('#resultMeta').textContent='初回設定';
+    $('#results').innerHTML='<div class="empty">初回だけアクセスキーを保存してください。保存後は自動でこの検索を続行します。</div>';
+    $('#searchProvider').value='direct';
+    $('#directKey').value='';
+    $('#apiUrl').value=cfg().api;
+    $('#connection').textContent='未確認';
+    $('#connection').className='connection';
+    refreshSettingsUI();
+    if(!dlg.open) dlg.showModal();
+    setTimeout(()=>$('#directKey').focus(),100);
+    return;
+  }
+  if(c.provider==='api'&&!c.api){
+    pendingSearch=true;
+    $('#resultMeta').textContent='初回設定';
+    $('#results').innerHTML='<div class="empty">中継API URLを一度だけ設定してください。保存後は自動でこの検索を続行します。</div>';
+    $('#searchProvider').value='api';
+    $('#apiUrl').value='';
+    refreshSettingsUI();
+    if(!dlg.open) dlg.showModal();
+    setTimeout(()=>$('#apiUrl').focus(),100);
+    return;
+  }
   const btn=$('#searchBtn');const old=btn.textContent;btn.disabled=true;btn.textContent='検索中…';$('#results').innerHTML='<div class="empty">検索中…</div>';$('#resultMeta').textContent='取得中';
   try{const d=await api('/route',{from,to,date:$('#date').value,time:$('#time').value,mode});const routes=sortCommute(A(d.routes));$('#resultMeta').textContent=`${routes.length}件`;$('#results').innerHTML=routes.length?routes.map(routeHTML).join(''):'<div class="empty">経路が見つかりませんでした。</div>';saveRecent()}
-  catch(e){$('#resultMeta').textContent='エラー';$('#results').innerHTML=`<div class="empty">${esc(e.message)}</div>`;notice('検索に失敗しました。設定のアクセスキーまたは接続先を確認してください。')}
+  catch(e){$('#resultMeta').textContent='エラー';$('#results').innerHTML=`<div class="empty">${esc(e.message)}</div>`;notice('検索に失敗しました：'+e.message)}
   finally{btn.disabled=false;btn.textContent=old}
 }
 $('#searchBtn').addEventListener('click',search);$('#commuteBtn').addEventListener('click',()=>{$('#from').value='二俣川';$('#to').value='中野坂上';search()});
@@ -117,9 +140,27 @@ $('#statusRefresh').onclick=loadStatus;
 const dlg=$('#settings');
 function refreshSettingsUI(){const p=$('#searchProvider').value;$('#directOnly').classList.toggle('show',p==='direct');$('#apiOnly').classList.toggle('show',p==='api')}
 $('#searchProvider').onchange=refreshSettingsUI;
-$('#settingsBtn').onclick=()=>{$('#searchProvider').value=cfg().provider;$('#directKey').value=cfg().key;$('#apiUrl').value=cfg().api;$('#connection').textContent='未確認';$('#connection').className='connection';refreshSettingsUI();dlg.showModal()};
-$('#closeSettings').onclick=()=>dlg.close();
-$('#saveSettings').onclick=()=>{const p=$('#searchProvider').value;localStorage.setItem('ekinaviSearchProvider',p);const key=$('#directKey').value.trim();if(key)localStorage.setItem('ekinaviDirectKey',key);else localStorage.removeItem('ekinaviDirectKey');const v=$('#apiUrl').value.trim().replace(/\/$/,'');if(v)localStorage.setItem('transitLabsApi',v);else localStorage.removeItem('transitLabsApi');dlg.close();notice('設定を保存しました。次の検索から駅ナビ内に結果を表示します。')};
+$('#settingsBtn').onclick=()=>{pendingSearch=false;$('#searchProvider').value=cfg().provider;$('#directKey').value=cfg().key;$('#apiUrl').value=cfg().api;$('#connection').textContent='未確認';$('#connection').className='connection';refreshSettingsUI();dlg.showModal()};
+$('#closeSettings').onclick=()=>{pendingSearch=false;dlg.close()};
+
+$('#directKey').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#saveSettings').click()}});
+$('#apiUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#saveSettings').click()}});
+
+$('#saveSettings').onclick=()=>{
+  const p=$('#searchProvider').value;
+  const key=$('#directKey').value.trim();
+  const v=$('#apiUrl').value.trim().replace(/\/$/,'');
+  if(p==='direct'&&!key){$('#connection').textContent='アクセスキーを入力してください';$('#connection').className='connection bad';return}
+  if(p==='api'&&!v){$('#connection').textContent='中継API URLを入力してください';$('#connection').className='connection bad';return}
+  localStorage.setItem('ekinaviSearchProvider',p);
+  if(key)localStorage.setItem('ekinaviDirectKey',key);else localStorage.removeItem('ekinaviDirectKey');
+  if(v)localStorage.setItem('transitLabsApi',v);else localStorage.removeItem('transitLabsApi');
+  const retry=pendingSearch;
+  pendingSearch=false;
+  dlg.close();
+  notice('接続設定を保存しました。');
+  if(retry)setTimeout(search,50);
+};
 $('#testApi').onclick=async()=>{const entered=$('#apiUrl').value.trim().replace(/\/$/,'');if(!entered){$('#connection').textContent='URLを入力してください';$('#connection').className='connection bad';return}const oldProvider=localStorage.getItem('ekinaviSearchProvider');const oldApi=localStorage.getItem('transitLabsApi');localStorage.setItem('ekinaviSearchProvider','api');localStorage.setItem('transitLabsApi',entered);try{await workerApi('/health');$('#connection').textContent='接続OK';$('#connection').className='connection ok'}catch(e){$('#connection').textContent='接続失敗: '+e.message;$('#connection').className='connection bad'}finally{if(oldProvider===null)localStorage.removeItem('ekinaviSearchProvider');else localStorage.setItem('ekinaviSearchProvider',oldProvider);if(oldApi===null)localStorage.removeItem('transitLabsApi');else localStorage.setItem('transitLabsApi',oldApi)}};
 })();
 </script>

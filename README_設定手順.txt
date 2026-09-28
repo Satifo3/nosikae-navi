@@ -1,4 +1,10 @@
-駅ナビ v1.2 全国版
+駅ナビ v1.3
+========================
+
+標準検索はAPI設定不要です。乗換検索ボタンから全国検索を開けます。
+駅ナビ内で詳細な経路カード・番線等を表示したい場合のみ、Cloudflare Worker + 駅すぱあとAPIを設定してください。
+
+Transit Labs v1.0 全国版
 ========================
 
 このZIPには以下が入っています。
@@ -25,7 +31,7 @@ APIキーを index.html に直書きする設計にはしていません。
       wrangler deploy
 6. 発行されたURL（例 https://transit-labs-api.xxxxx.workers.dev）をコピー。
 7. index.html をGitHub Pages等に置く。
-8. 駅ナビ右上の⚙︎ →「中継API URL」にWorker URLを貼る → 接続テスト → 保存。
+8. Transit Labs右上の⚙︎ →「中継API URL」にWorker URLを貼る → 接続テスト → 保存。
 
 実装済み
 --------

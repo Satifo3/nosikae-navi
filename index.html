@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f7f8fb" />
+<title>Transit Labs</title>
+<style>
+  :root{--bg:#f5f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--accent2:#eef4ff;--ok:#0f9f6e;--warn:#d97706;--danger:#dc2626;--shadow:0 10px 30px rgba(17,24,39,.08);--r:22px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif}
+  body{min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .app{max-width:760px;margin:auto;min-height:100vh;padding:14px 14px 100px}
+  .top{display:flex;align-items:center;justify-content:space-between;margin:4px 4px 14px}
+  .brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:14px;background:#111827;color:white;display:grid;place-items:center;font-weight:900;letter-spacing:-1px;box-shadow:var(--shadow)}
+  .brand h1{font-size:21px;margin:0;letter-spacing:-.5px}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+  .iconBtn{border:0;background:var(--card);width:42px;height:42px;border-radius:14px;box-shadow:var(--shadow);font-size:20px}
+  .hero{background:linear-gradient(145deg,#ffffff,#f9fbff);border:1px solid #edf0f5;border-radius:28px;padding:16px;box-shadow:var(--shadow)}
+  .stationBox{display:grid;grid-template-columns:1fr 42px;gap:8px;align-items:center}
+  .fields{display:grid;gap:10px}
+  .field{background:#f7f8fa;border:1px solid var(--line);border-radius:18px;padding:10px 13px}
+  .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}.field input{width:100%;border:0;outline:0;background:transparent;font-size:18px;font-weight:700;color:var(--ink);padding:0}
+  .swap{border:0;border-radius:16px;background:#111827;color:#fff;width:42px;height:42px;font-size:18px}
+  .chips{display:flex;gap:8px;overflow:auto;padding:12px 0 2px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+  .chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;font-size:13px;color:#374151}.chip.active{background:#111827;color:#fff;border-color:#111827}
+  .timeRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.timeRow input,.timeRow select{width:100%;border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px;color:#111827}
+  .search{width:100%;border:0;border-radius:18px;background:var(--accent);color:#fff;font-weight:800;font-size:17px;padding:15px;margin-top:12px;box-shadow:0 8px 20px rgba(37,99,235,.25)}
+  .quick{margin-top:14px;background:#111827;color:#fff;border-radius:24px;padding:16px;position:relative;overflow:hidden}.quick:after{content:"";position:absolute;width:140px;height:140px;border:24px solid rgba(255,255,255,.07);border-radius:50%;right:-60px;top:-55px}.quick small{opacity:.7}.quick h2{margin:5px 0 4px;font-size:20px}.quick .go{margin-top:12px;border:0;background:#fff;color:#111827;border-radius:15px;padding:11px 14px;font-weight:800;position:relative;z-index:2}
+  .sectionTitle{display:flex;align-items:end;justify-content:space-between;margin:22px 4px 10px}.sectionTitle h2{margin:0;font-size:17px}.sectionTitle span{font-size:12px;color:var(--muted)}
+  .statusGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.status{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;min-height:84px}.status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:5px}.status strong{font-size:13px;display:block;margin-top:7px}.status small{font-size:11px;color:var(--muted)}
+  .results{display:grid;gap:12px}.route{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 5px 18px rgba(17,24,39,.04)}
+  .routeHead{display:flex;justify-content:space-between;align-items:flex-start;padding:15px 15px 12px}.routeHead h3{margin:0;font-size:22px;letter-spacing:-.5px}.routeHead .meta{font-size:12px;color:var(--muted);margin-top:3px}.badge{background:var(--accent2);color:var(--accent);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800}
+  .routeBody{padding:0 15px 15px}.leg{display:grid;grid-template-columns:55px 24px 1fr;gap:8px;min-height:70px}.tm{font-weight:800;font-size:14px;padding-top:2px}.rail{position:relative}.rail:before{content:"";position:absolute;left:10px;top:9px;bottom:-9px;width:3px;background:#c7d2fe;border-radius:2px}.leg:last-child .rail:before{display:none}.node{position:absolute;left:4px;top:4px;width:15px;height:15px;border:4px solid var(--accent);background:#fff;border-radius:50%;z-index:1}.desc{padding-bottom:15px}.desc b{font-size:15px}.desc .sub{font-size:12px;color:var(--muted);margin-top:4px}.platform{display:inline-flex;align-items:center;gap:4px;background:#f3f4f6;border-radius:8px;padding:3px 7px;font-size:11px;font-weight:800;margin-left:6px}.transfer{margin:4px 0 11px 87px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:13px;padding:8px 10px;font-size:12px;font-weight:700}.fare{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-top:3px;font-size:13px}.fare strong{font-size:16px}
+  .tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));width:min(calc(100% - 24px),736px);background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border:1px solid rgba(229,231,235,.9);border-radius:22px;box-shadow:0 10px 35px rgba(17,24,39,.16);display:grid;grid-template-columns:repeat(4,1fr);padding:6px;z-index:20}.tab{border:0;background:transparent;padding:8px 2px;border-radius:16px;color:#6b7280;font-size:11px}.tab span{display:block;font-size:20px;line-height:22px}.tab.active{background:#111827;color:#fff}
+  .panel{display:none}.panel.active{display:block}
+  .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:15px;margin-bottom:12px}.card h3{margin:0 0 10px;font-size:16px}.row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f1f3}.row:last-child{border-bottom:0}.muted{color:var(--muted);font-size:12px}.pill{border-radius:999px;padding:5px 8px;background:#ecfdf5;color:#047857;font-size:11px;font-weight:800}.danger{background:#fef2f2;color:#b91c1c}.settings input{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px}.settings button{border:0;background:#111827;color:#fff;padding:11px 13px;border-radius:13px;font-weight:700}.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+  dialog{border:0;border-radius:22px;padding:0;width:min(92vw,520px);box-shadow:0 25px 80px rgba(0,0,0,.25)}dialog::backdrop{background:rgba(17,24,39,.35);backdrop-filter:blur(3px)}.modal{padding:18px}.modal h3{margin:0 0 12px}.modal button{border:0;border-radius:12px;padding:10px 12px;font-weight:700}.close{background:#111827;color:#fff;width:100%;margin-top:12px}
+  @media(max-width:460px){.app{padding-left:10px;padding-right:10px}.statusGrid{grid-template-columns:1fr}.timeRow{grid-template-columns:1fr 1fr}.routeHead h3{font-size:20px}.leg{grid-template-columns:49px 22px 1fr;gap:7px}.transfer{margin-left:78px}.brand p{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><div class="brand"><div class="logo">TL</div><div><h1>Transit Labs</h1><p>乗換・時刻表・運行情報を、見やすく。</p></div></div><button class="iconBtn" id="settingsBtn">⚙︎</button></header>
+
+  <main id="homePanel" class="panel active">
+    <section class="hero">
+      <div class="stationBox"><div class="fields"><div class="field"><label>出発</label><input id="from" value="二俣川" autocomplete="off"></div><div class="field"><label>到着</label><input id="to" value="中野坂上" autocomplete="off"></div></div><button class="swap" id="swap">⇅</button></div>
+      <div class="chips" id="modeChips"><button class="chip active" data-mode="departure">今すぐ</button><button class="chip" data-mode="arrival">到着時刻</button><button class="chip" data-mode="first">始発</button><button class="chip" data-mode="last">終電</button></div>
+      <div class="timeRow"><input id="date" type="date"><input id="time" type="time"></div>
+      <button class="search" id="searchBtn">この条件で検索</button>
+    </section>
+
+    <section class="quick"><small>いつもの通勤</small><h2>二俣川 → 中野坂上</h2><div style="font-size:13px;opacity:.82">新宿三丁目乗換を優先</div><button class="go" id="commuteBtn">会社へ行く →</button></section>
+
+    <div class="sectionTitle"><h2>登録路線の運行情報</h2><span id="updatedAt">デモ情報</span></div>
+    <div class="statusGrid" id="statusGrid"></div>
+
+    <div class="sectionTitle"><h2>検索結果</h2><span id="resultCount"></span></div>
+    <div id="results" class="results"></div>
+  </main>
+
+  <main id="timetablePanel" class="panel">
+    <div class="sectionTitle"><h2>時刻表</h2><span>次の列車をすぐ確認</span></div>
+    <div class="card"><div class="field"><label>駅名</label><input id="ttStation" value="中野坂上"></div><div class="chips"><button class="chip active">丸ノ内線 荻窪方面</button><button class="chip">丸ノ内線 池袋方面</button></div></div>
+    <div class="card" id="timetableList"></div>
+  </main>
+
+  <main id="statusPanel" class="panel">
+    <div class="sectionTitle"><h2>運行情報</h2><span>お気に入り路線のみ</span></div><div id="statusFull"></div>
+  </main>
+
+  <main id="favoritePanel" class="panel">
+    <div class="sectionTitle"><h2>お気に入り</h2><span>ワンタップ検索</span></div>
+    <div class="card"><div class="row"><div><strong>会社へ</strong><div class="muted">二俣川 → 新宿三丁目 → 中野坂上</div></div><button class="chip" id="favGo">検索</button></div><div class="row"><div><strong>自宅へ</strong><div class="muted">中野坂上 → 新宿三丁目 → 二俣川</div></div><button class="chip" id="favHome">検索</button></div></div>
+  </main>
+</div>
+
+<nav class="tabs"><button class="tab active" data-panel="homePanel"><span>⌂</span>乗換</button><button class="tab" data-panel="timetablePanel"><span>◷</span>時刻表</button><button class="tab" data-panel="statusPanel"><span>!</span>運行情報</button><button class="tab" data-panel="favoritePanel"><span>★</span>お気に入り</button></nav>
+
+<dialog id="settings"><div class="modal settings"><h3>データ接続設定</h3><p class="muted">現在はデモモードです。全国リアルタイム版では、APIキーをHTMLに直接入れず、中継APIのURLだけをここに設定します。</p><label class="muted">中継API URL（任意）</label><input id="apiUrl" placeholder="https://example.com/api/transit"><div style="height:10px"></div><button id="saveSettings">保存</button><button class="close" id="closeSettings">閉じる</button></div></dialog>
+
+<script>
+(() => {
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const now=new Date(); $('#date').value=now.toISOString().slice(0,10); $('#time').value=now.toTimeString().slice(0,5);
+  let mode='departure';
+  const statuses=[
+    {name:'相鉄線',state:'平常運転',level:'ok',note:'直通列車を含む'},
+    {name:'東急線',state:'平常運転',level:'ok',note:'東横線・新横浜線'},
+    {name:'丸ノ内線',state:'平常運転',level:'ok',note:'池袋〜荻窪'}
+  ];
+  const demoRoutes=[
+    {tag:'いつもの経路',dep:'08:12',arr:'09:17',mins:65,transfer:1,fare:'¥815',legs:[
+      {t:'08:12',station:'二俣川',platform:'3番線 発',sub:'相鉄本線・相鉄新横浜線 → 東急線直通'},
+      {t:'09:06',station:'新宿三丁目',platform:'4番線 着',sub:'降車後、丸ノ内線へ移動',transfer:'4番線着 → 丸ノ内線ホーム / 徒歩 約4分'},
+      {t:'09:11',station:'新宿三丁目',platform:'2番線 発',sub:'東京メトロ丸ノ内線・荻窪方面'},
+      {t:'09:17',station:'中野坂上',platform:'1番線 着',sub:'到着'}]},
+    {tag:'乗換少なめ',dep:'08:22',arr:'09:31',mins:69,transfer:1,fare:'¥815',legs:[
+      {t:'08:22',station:'二俣川',platform:'3番線 発',sub:'相鉄・東急直通'},
+      {t:'09:19',station:'新宿三丁目',platform:'4番線 着',sub:'丸ノ内線へ',transfer:'乗換 約5分'},
+      {t:'09:25',station:'新宿三丁目',platform:'2番線 発',sub:'丸ノ内線・荻窪方面'},
+      {t:'09:31',station:'中野坂上',platform:'1番線 着',sub:'到着'}]}
+  ];
+  function statusHTML(s){return `<div class="status"><small><span class="dot" style="background:${s.level==='ok'?'var(--ok)':'var(--warn)'}"></span>${s.state}</small><strong>${s.name}</strong><small>${s.note}</small></div>`}
+  $('#statusGrid').innerHTML=statuses.map(statusHTML).join('');
+  $('#statusFull').innerHTML=statuses.map(s=>`<div class="card"><div class="row"><div><strong>${s.name}</strong><div class="muted">${s.note}</div></div><span class="pill ${s.level==='ok'?'':'danger'}">${s.state}</span></div></div>`).join('');
+  function routeHTML(r){return `<article class="route"><div class="routeHead"><div><h3>${r.dep} → ${r.arr}</h3><div class="meta">${r.mins}分 ・ 乗換${r.transfer}回</div></div><span class="badge">${r.tag}</span></div><div class="routeBody">${r.legs.map((l,i)=>`${l.transfer?`<div class="transfer">↳ ${l.transfer}</div>`:''}<div class="leg"><div class="tm">${l.t}</div><div class="rail"><span class="node"></span></div><div class="desc"><b>${l.station}</b><span class="platform">${l.platform}</span><div class="sub">${l.sub}</div></div></div>`).join('')}<div class="fare"><span>IC運賃（デモ表示）</span><strong>${r.fare}</strong></div></div></article>`}
+  function renderRoutes(routes=demoRoutes){$('#results').innerHTML=routes.map(routeHTML).join('');$('#resultCount').textContent=`${routes.length}件`}
+  renderRoutes();
+  const tt=[['11:58','荻窪','2番線'],['12:02','荻窪','2番線'],['12:06','荻窪','2番線'],['12:10','荻窪','2番線'],['12:14','荻窪','2番線'],['12:18','荻窪','2番線']];
+  $('#timetableList').innerHTML='<h3>中野坂上　丸ノ内線</h3>'+tt.map((x,i)=>`<div class="row"><div><strong style="font-size:20px">${x[0]}</strong><div class="muted">${x[1]}方面</div></div><div style="text-align:right"><span class="platform">${x[2]}</span>${i<3?'<div class="muted" style="margin-top:5px">あと '+(5+i*4)+'分</div>':''}</div></div>`).join('');
+  $$('#modeChips .chip').forEach(b=>b.onclick=()=>{$$('#modeChips .chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode});
+  $('#swap').onclick=()=>{const a=$('#from').value;$('#from').value=$('#to').value;$('#to').value=a};
+  async function search(){
+    const api=localStorage.getItem('transitApiUrl');
+    if(api){
+      try{
+        $('#results').innerHTML='<div class="empty">リアルタイムデータを取得中…</div>';
+        const url=new URL(api);url.searchParams.set('from',$('#from').value);url.searchParams.set('to',$('#to').value);url.searchParams.set('date',$('#date').value);url.searchParams.set('time',$('#time').value);url.searchParams.set('mode',mode);
+        const res=await fetch(url);if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();
+        if(Array.isArray(data.routes)){renderRoutes(data.routes);return}
+        throw new Error('routes がありません');
+      }catch(e){console.warn(e);}
+    }
+    const f=$('#from').value.trim(),t=$('#to').value.trim();
+    if(f==='中野坂上'&&t==='二俣川'){
+      const reversed=demoRoutes.map(r=>({...r,dep:'18:10',arr:'19:15',legs:[{t:'18:10',station:'中野坂上',platform:'2番線 発',sub:'丸ノ内線・池袋方面'},{t:'18:16',station:'新宿三丁目',platform:'1番線 着',sub:'相鉄・東急直通ホームへ',transfer:'丸ノ内線 → 直通線ホーム / 徒歩 約4分'},{t:'18:22',station:'新宿三丁目',platform:'4番線 発',sub:'東急・相鉄線直通'},{t:'19:15',station:'二俣川',platform:'2番線 着',sub:'到着'}]}));renderRoutes(reversed);
+    }else renderRoutes();
+  }
+  $('#searchBtn').onclick=search; $('#commuteBtn').onclick=()=>{$('#from').value='二俣川';$('#to').value='中野坂上';search();window.scrollTo({top:520,behavior:'smooth'})};
+  $('#favGo').onclick=()=>{$('[data-panel="homePanel"]').click();$('#from').value='二俣川';$('#to').value='中野坂上';search()};
+  $('#favHome').onclick=()=>{$('[data-panel="homePanel"]').click();$('#from').value='中野坂上';$('#to').value='二俣川';search()};
+  $$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');$$('.panel').forEach(p=>p.classList.remove('active'));$('#'+t.dataset.panel).classList.add('active');window.scrollTo(0,0)});
+  const dlg=$('#settings');$('#settingsBtn').onclick=()=>{ $('#apiUrl').value=localStorage.getItem('transitApiUrl')||'';dlg.showModal()};$('#closeSettings').onclick=()=>dlg.close();$('#saveSettings').onclick=()=>{localStorage.setItem('transitApiUrl',$('#apiUrl').value.trim());dlg.close();alert('保存しました')};
+})();
+</script>
+</body>
+</html>
